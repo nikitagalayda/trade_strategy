@@ -27,12 +27,12 @@ class Strategy():
         self.high_price_trace = np.array([])
         self.action_trace = np.array([])
         self.cycle_score_trace = np.array([])
-        self.ma_long = 30
-        self.ma_short = 15
+        self.ma_long = 10
+        self.ma_short = 5
         self.UP = 1
         self.DOWN = -1
         self.cycle_score = 0
-        self.threshold = 0.8
+        self.threshold = 0.9
         self.cycle_trend_threshold = 0.6
         self.action_cd = 0
         self.action_count = 0
@@ -68,7 +68,7 @@ class Strategy():
         res = 2*((avg - l_min) / (l_max - l_min)) - 1
 
         return res
-	
+    
     # called every self.period
     def trade(self, information):
         # Log(str(self.close_price_trace))
@@ -129,7 +129,7 @@ class Strategy():
             return [
                 {
                     'exchange': exchange,
-                    'amount': 0.1,
+                    'amount': 0.1+cycle_trend,
                     'price': -1,
                     'type': 'MARKET',
                     'pair': pair,
@@ -145,7 +145,7 @@ class Strategy():
             return [
                 {
                     'exchange': exchange,
-                    'amount': -0.1,
+                    'amount': -(0.1+abs(1-self.cycle_score)),
                     'price': -1,
                     'type': 'MARKET',
                     'pair': pair,
@@ -168,7 +168,7 @@ class Strategy():
         self.last_cycle_status = self.cycle_score
 
         return []
-	
+    
 
     def on_order_state_change(self, order):
         # pass
