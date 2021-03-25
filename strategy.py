@@ -32,8 +32,10 @@ class Strategy():
         self.UP = 1
         self.DOWN = -1
         self.cycle_score = 0
-        self.threshold = 0.8
+        self.threshold = 0.85
         self.cycle_trend_threshold = 0.6
+        self.action_cd = 1
+        self.action_count = 0
 
     def get_ema(self, data):
         s_t3 = talib.EMA(data, self.ma_short)[-1]
@@ -102,12 +104,13 @@ class Strategy():
         # s_adx = self.get_adx(self.close_price_trace, self.ma_short)
         l_adx = self.get_adx(self.close_price_trace, self.ma_long)
 
-        self.cycle_score = (close_price_ema)*(0.8*close_volume_ema + l_adx) / 1.8
+        self.cycle_score = (close_price_ema)*(0.5*close_volume_ema + l_adx) / 1.5
         # Log(self.cycle_score)
         self.cycle_score_trace = np.append(self.cycle_score_trace, [self.cycle_score])
         self.cycle_score_trace = self.cycle_score_trace[-self.ma_long:]
 
         cycle_trend = self.get_cycle_trend()
+        self.action_count += 1
         # Log(str(cycle_trend))
         
         # sign = direction
@@ -117,30 +120,32 @@ class Strategy():
         # if self.cycle_score > self.threshold and self.last_type == 'sell' and self.last_cycle_status < 0.5:
         # market looking up, and scores have been going up
         # Log(str(self.cycle_score_trace))
-        if self.last_type == 'sell' and (self.cycle_score > self.threshold and cycle_trend > 0.2) and self.cycle_score_trace[-2] < 0.3:
+        if self.last_type == 'sell' and (self.cycle_score < 0.5 and cycle_trend < 0) and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
         # if self.cycle_score > self.threshold:
             self.action_trace = np.append(self.action_trace, [1])
             # Log('buying 1 unit of ' + str(target_currency))
             self.last_type = 'buy'
+            self.action_count = 0
             return [
                 {
                     'exchange': exchange,
-                    'amount': 0.5,
+                    'amount': 0.1,
                     'price': -1,
                     'type': 'MARKET',
                     'pair': pair,
                 }
             ]
         # elif self.cycle_score < 0.4 and self.last_type == 'buy' and self.last_cycle_status > self.threshold:
-        elif self.last_type == 'buy' and (self.cycle_score < 0.3 and cycle_trend < 0) and self.cycle_score_trace[-2] > 0.5:
+        elif self.last_type == 'buy' and (self.cycle_score >0.3 and cycle_trend > 0) and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
         # if self.cycle_score < -self.threshold:
             self.action_trace = np.append(self.action_trace, [-1])
             # Log('assets before selling: ' + str(self['assets'][exchange][base_currency]))
             self.last_type = 'sell'
+            self.action_count = 0
             return [
                 {
                     'exchange': exchange,
-                    'amount': -0.5,
+                    'amount': -0.1,
                     'price': -1,
                     'type': 'MARKET',
                     'pair': pair,
