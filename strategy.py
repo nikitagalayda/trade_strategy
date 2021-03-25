@@ -27,14 +27,14 @@ class Strategy():
         self.high_price_trace = np.array([])
         self.action_trace = np.array([])
         self.cycle_score_trace = np.array([])
-        self.ma_long = 10
-        self.ma_short = 5
+        self.ma_long = 30
+        self.ma_short = 15
         self.UP = 1
         self.DOWN = -1
         self.cycle_score = 0
-        self.threshold = 0.85
+        self.threshold = 0.8
         self.cycle_trend_threshold = 0.6
-        self.action_cd = 1
+        self.action_cd = 0
         self.action_count = 0
 
     def get_ema(self, data):
@@ -120,7 +120,7 @@ class Strategy():
         # if self.cycle_score > self.threshold and self.last_type == 'sell' and self.last_cycle_status < 0.5:
         # market looking up, and scores have been going up
         # Log(str(self.cycle_score_trace))
-        if self.last_type == 'sell' and (self.cycle_score < 0.5 and cycle_trend < 0) and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
+        if self.last_type == 'sell' and (self.cycle_score > self.threshold and cycle_trend > 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
         # if self.cycle_score > self.threshold:
             self.action_trace = np.append(self.action_trace, [1])
             # Log('buying 1 unit of ' + str(target_currency))
@@ -136,7 +136,7 @@ class Strategy():
                 }
             ]
         # elif self.cycle_score < 0.4 and self.last_type == 'buy' and self.last_cycle_status > self.threshold:
-        elif self.last_type == 'buy' and (self.cycle_score >0.3 and cycle_trend > 0) and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
+        elif self.last_type == 'buy' and (self.cycle_score < 0.2 and cycle_trend < 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
         # if self.cycle_score < -self.threshold:
             self.action_trace = np.append(self.action_trace, [-1])
             # Log('assets before selling: ' + str(self['assets'][exchange][base_currency]))
