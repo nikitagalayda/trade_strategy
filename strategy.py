@@ -25,7 +25,7 @@ class Strategy():
         self.close_volume_trace = np.array([])
         self.low_price_trace = np.array([])
         self.high_price_trace = np.array([])
-        self.action_trace = np.array([])
+        self.action_trace = np.array([-1])
         self.cycle_score_trace = np.array([])
         self.ma_long = 10
         self.ma_short = 5
@@ -68,7 +68,10 @@ class Strategy():
         res = 2*((avg - l_min) / (l_max - l_min)) - 1
 
         return res
-    
+	
+    def get_action_trend(self):
+        return np.average(self.action_trace)
+
     # called every self.period
     def trade(self, information):
         # Log(str(self.close_price_trace))
@@ -108,10 +111,14 @@ class Strategy():
         # Log(self.cycle_score)
         self.cycle_score_trace = np.append(self.cycle_score_trace, [self.cycle_score])
         self.cycle_score_trace = self.cycle_score_trace[-self.ma_long:]
+        self.action_trace = self.action_trace[-self.ma_long:]
 
         cycle_trend = self.get_cycle_trend()
         self.action_count += 1
-        # Log(str(cycle_trend))
+        action_trend = self.get_action_trend()
+        
+        # Log(str(self.close_price_trace))
+        Log(str(action_trend))
         
         # sign = direction
         # value = magnitude
@@ -120,8 +127,9 @@ class Strategy():
         # if self.cycle_score > self.threshold and self.last_type == 'sell' and self.last_cycle_status < 0.5:
         # market looking up, and scores have been going up
         # Log(str(self.cycle_score_trace))
-        if self.last_type == 'sell' and (self.cycle_score > self.threshold and cycle_trend > 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
-        # if self.cycle_score > self.threshold:
+        # if self.last_type == 'sell' and (self.cycle_score > self.threshold and cycle_trend > 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
+        # if (self.cycle_score < 0.3 and cycle_trend < 0.1) and self.action_count > self.action_cd:
+        if (action_trend < 0) and (self.cycle_score > self.threshold and cycle_trend > 0):
             self.action_trace = np.append(self.action_trace, [1])
             # Log('buying 1 unit of ' + str(target_currency))
             self.last_type = 'buy'
@@ -136,8 +144,9 @@ class Strategy():
                 }
             ]
         # elif self.cycle_score < 0.4 and self.last_type == 'buy' and self.last_cycle_status > self.threshold:
-        elif self.last_type == 'buy' and (self.cycle_score < 0.2 and cycle_trend < 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
-        # if self.cycle_score < -self.threshold:
+        # elif self.last_type == 'buy' and (self.cycle_score < 0.2 and cycle_trend < 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
+        # if (self.cycle_score > 0.5 and cycle_trend > 0) and self.action_count > self.action_cd:
+        if (action_trend > 0) and (self.cycle_score > self.threshold and cycle_trend > 0):
             self.action_trace = np.append(self.action_trace, [-1])
             # Log('assets before selling: ' + str(self['assets'][exchange][base_currency]))
             self.last_type = 'sell'
@@ -168,9 +177,9 @@ class Strategy():
         self.last_cycle_status = self.cycle_score
 
         return []
-    
+	
 
     def on_order_state_change(self, order):
-        # pass
-        Log("on order state change message: " + str(order) + " order price: " + str(order["price"]))
-        Log('price Trace: ' + str(self.close_price_trace))
+        pass
+        # Log("on order state change message: " + str(order) + " order price: " + str(order["price"]))
+        # Log('price Trace: ' + str(self.close_price_trace))
