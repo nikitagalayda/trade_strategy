@@ -53,11 +53,6 @@ class Strategy():
         return adx[-1] / 100.0
     
     def get_cycle_trend(self):
-        # Log(self.cycle_score_trace)
-        # if len(self.cycle_score_trace < 5):
-        #     return 0.0
-        # if self.cycle_score_trace.size < self.ma_long:
-        #     return 0.0
         tmp_min = np.amin(self.cycle_score_trace)
         c = self.cycle_score_trace + tmp_min
 
@@ -74,8 +69,6 @@ class Strategy():
 
     # called every self.period
     def trade(self, information):
-        # Log(str(self.close_price_trace))
-        # for single pair strategy, user can choose which exchange/pair to use when launch, get current exchange/pair from information
         exchange = list(information['candles'])[0]
         pair = list(information['candles'][exchange])[0]
         target_currency = pair.split('-')[0]  #ETH
@@ -117,21 +110,10 @@ class Strategy():
         self.action_count += 1
         action_trend = self.get_action_trend()
         
-        # Log(str(self.close_price_trace))
         Log(str(action_trend))
         
-        # sign = direction
-        # value = magnitude
-        # Log(str(self.cycle_score))
-        
-        # if self.cycle_score > self.threshold and self.last_type == 'sell' and self.last_cycle_status < 0.5:
-        # market looking up, and scores have been going up
-        # Log(str(self.cycle_score_trace))
-        # if self.last_type == 'sell' and (self.cycle_score > self.threshold and cycle_trend > 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] < 0.3:
-        # if (self.cycle_score < 0.3 and cycle_trend < 0.1) and self.action_count > self.action_cd:
         if (action_trend < 0) and (self.cycle_score > self.threshold and cycle_trend > 0):
             self.action_trace = np.append(self.action_trace, [1])
-            # Log('buying 1 unit of ' + str(target_currency))
             self.last_type = 'buy'
             self.action_count = 0
             return [
@@ -143,12 +125,8 @@ class Strategy():
                     'pair': pair,
                 }
             ]
-        # elif self.cycle_score < 0.4 and self.last_type == 'buy' and self.last_cycle_status > self.threshold:
-        # elif self.last_type == 'buy' and (self.cycle_score < 0.2 and cycle_trend < 0):# and self.action_count > self.action_cd:# and self.cycle_score_trace[-2] > 0.5:
-        # if (self.cycle_score > 0.5 and cycle_trend > 0) and self.action_count > self.action_cd:
         if (action_trend > 0) and (self.cycle_score > self.threshold and cycle_trend > 0):
             self.action_trace = np.append(self.action_trace, [-1])
-            # Log('assets before selling: ' + str(self['assets'][exchange][base_currency]))
             self.last_type = 'sell'
             self.action_count = 0
             return [
@@ -160,26 +138,11 @@ class Strategy():
                     'pair': pair,
                 }
             ]
-        # buy at the dip
-        # elif (self.cycle_score < 0.3 and cycle_trend < 0):
-        #     self.action_trace = np.append(self.action_trace, [1])
-        #     # Log('assets before selling: ' + str(self['assets'][exchange][base_currency]))
-        #     self.last_type = 'buy'
-        #     return [
-        #         {
-        #             'exchange': exchange,
-        #             'amount': 1,
-        #             'price': -1,
-        #             'type': 'MARKET',
-        #             'pair': pair,
-        #         }
-        #     ]
+
         self.last_cycle_status = self.cycle_score
 
         return []
 	
 
     def on_order_state_change(self, order):
-        pass
-        # Log("on order state change message: " + str(order) + " order price: " + str(order["price"]))
-        # Log('price Trace: ' + str(self.close_price_trace))
+        Log("on order state change message: " + str(order) + " order price: " + str(order["price"]))
